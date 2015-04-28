@@ -1,0 +1,5 @@
+rahmi = 1
+hilmi = 20
+muh = 3
+
+yazdir(rahmi+muh)

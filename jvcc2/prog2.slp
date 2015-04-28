@@ -1,0 +1,2 @@
+a := 5+3; b := (print(a, a-1), 10*a); print(b);
+c := (a := 5+3; b := (a := 5+3; b := (a := 5+3; b := (a := 5+3; b := (print(a, a-1), 10*a); print(b), 10*a); print(b), 10*a); print(b), 10*a); print(b), a+b)

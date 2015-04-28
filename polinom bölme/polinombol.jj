@@ -1,0 +1,63 @@
+/*
+tümce -> bölünen / bölen
+bölünen -> polinom
+bölen -> polinom
+polinom -> sayı X ^ sayı ( "+" sayı X ^ sayı)+
+Grameriniz şu biçimde polinom girişlerini de desteklemelidir.
+P(x)=8 --->sabit sayı
+P(x)=x^3-4x+5  -->katsayı 1 veya -1, x^1 yerine x, 5x^0 yerine sadece 5
+P(x)=-2x^4+5  -->katsayı -2
+*/
+
+options { 
+    STATIC = true; //ayrıştırıcının metotları statik olur
+	LOOKAHEAD = 1;
+	DEBUG_PARSER = true;
+}
+
+PARSER_BEGIN( Pol )
+public class Pol{
+}
+PARSER_END( Pol )
+
+SKIP : { " " |"\t" | "\n" | "\r" | "\r\n" }
+
+TOKEN :
+{
+	  <BOLME : "/" | ";" >
+	| <US : "^" >
+	| <TOPLAM : "+" >
+	| <SAYI : (["0"-"9"])+ ("." (["0"-"9"])+)? >
+	| <X : "x" | "X" >
+}
+
+
+Tumce basla () : 
+{
+ Tumce t ; Bolunen blnn ; Bolen bln ; 
+}
+{
+	blnn = bolunen() <BOLME> bln = bolen() { t = new Tumce(blnn,bln); } 
+	{ return t; }
+}
+
+
+Bolunen bolunen() : { Bolunen blnn ; double s1,s2 ;}
+{
+	s1 = sayi() <X>  <US>  s2 = sayi() { blnn = new Bolunen(s1,s2); } 
+		( <TOPLAM> s1 = sayi() <X> <US>  s2 = sayi() { blnn.eval(s1,s2); })*
+	{ return blnn; }
+}
+
+Bolen bolen() : { Bolen bln ; double s1,s2 ;}
+{
+	s1 = sayi() <X> <US>  s2 = sayi() { bln = new Bolen(s1,s2); } 
+		( <TOPLAM> s1 = sayi() <X> <US>  s2 = sayi() { bln.eval(s1,s2); })*
+	{ return bln; }
+}
+
+
+double sayi() : { Token t; }
+{
+	 t = <SAYI> {return  Double.parseDouble(t.image); }
+}

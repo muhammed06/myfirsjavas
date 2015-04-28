@@ -1,0 +1,148 @@
+//seçenek bildirimi, 
+//ayrıştırıcı sınıfının bildirimi,
+// terminal ve gramer kurallarının bildirimi 
+//olmak üzere üç bildirim bölümü vardır.
+
+
+//KODLAMA//
+//gramerin yazılması,
+// token'ların bildirilmesi,
+// ayrıştırıcının tanımlanması,
+// sözdizim sınıflarının oluşturulması,
+// sözdizim ağacının üretilmesi ve 
+//ifadenin ağaç üzerinden değerlendirilmesi
+// gibi 6 aşamadan meydana gelir.
+
+options { 
+    STATIC = true; //ayrıştırıcının metotları statik olur
+	LOOKAHEAD = 1;
+}
+
+PARSER_BEGIN(EvalParse) 
+public class EvalParse {
+} 
+PARSER_END(EvalParse) 
+
+SKIP : { "\t" | " " }
+
+
+TOKEN : 
+{
+	  < NUMBER : ( ["0"-"9"] )+ ( "." (["0"-"9"])+)? >
+}		/* sayılar ve sözcükler */
+
+                    					/* satır sonu karakteri */
+
+TOKEN : 															/* operatörler */
+{
+	  < EOL : ("\n" | "\r" | "\r\n")+ >
+	| < EGER: ( "eğer" | "eger" | "EGER" | "EĞER" ) >
+	| < ISE: ( "ise" | "ISE" | "İSE" ) >
+	| < DEGIL: ( "DEGIL" | "DEĞİL" | "değil" | "degil" ) >
+	| < IFBITTI ( "IFBITTI" | "ifbitti" | "İFBİTTİ" ) >
+	| < BITTI: (<EOL>)* "bitir" >	  
+	| < ASSIGN: "=" >
+	| < YAZDIR: ( "yazdir" | "yazdir" ) >
+	| < PLUS: "+" >
+	| < MINUS: "-" >
+	| < TIMES: "*" >
+	| < DIVIDE: "/" >
+	| < POWER: "^" >
+	| < EXP: "exp" >
+	| < LOG: "log" >
+	| < SQRT: "sqrt" >
+	| < SIN: "sin" >
+	| < COS: "cos" >
+	| < MAX: "max" >
+	| < MIN: "min" >
+	| < X: "x" >
+	| < ID : ["a"-"z"] (["a"-"z"])* >
+	| < COM: "," >
+	| < LPR: "(" >
+	| < RPR: ")" >
+}
+
+
+
+Stm parse () : { Stm a ; }												//stm
+{  
+	a = Stm() ( ( <BITTI> ) | <EOF> ) { return a; }
+}
+
+Stm Stm () : { Stm a1,a2 ; }											//cstm
+{
+	a1= Stm2() ( <EOL> a2=Stm() { a1 = new CStm(a1,a2); } )?
+	{ return a1; }
+}
+
+Stm Stm2 () : { Token id ; Exp e ; ExpList el ; }							//Token Explist astm pstm
+{
+	  id = <ID> <ASSIGN> e = exper()
+	  {  return new AStm(id.image, e); }
+	| <YAZDIR> <LPR> el = ExpList() <RPR>
+		{ return new PStm(el); }
+}
+
+Exp exper () : { Exp a , b ; } 
+{
+	a = term() (
+		  <PLUS> b = term() { a = new Plus(a, b) ; }
+		| <MINUS> b = term() { a = new Minus(a, b) ;}
+	)*
+	{ return a; }
+}
+
+Exp term () : { Exp a ,b ; }
+{
+	a = unary() (
+		  <TIMES> b =  unary() { a= new Times(a,b);}
+		| <DIVIDE> b = unary() { a= new Divide(a,b);}
+	)*
+	{ return a; }
+}
+
+Exp unary () : { Exp a ; }
+{
+	  <PLUS> a = power() { return a; }
+	| <MINUS> a = power() { return ( new Times( new Num(-1),a)) ; }
+	| a = power() { return a; }
+}
+
+Exp power() : { Exp a,b ; }
+{
+	a = element() ( <POWER> b = power() { a = new Power(a,b); } )? 
+	{ return a; }
+}
+
+Exp element() : { Token id, t ; Exp a,b ; }
+{
+	  id = <ID> { return new Id(id.image); }
+	| t = <NUMBER> {return (new Num(Double.parseDouble(t.image))); }
+	| <X> { return (new Var());}
+	| <LPR> a= exper() <RPR>	{ return a; }
+	| <EXP>  <LPR> a= exper() <RPR> { return (new Euler(a)); }
+	| <LOG>  <LPR> a= exper() <RPR> { return (new Log(a)); }
+	| <SQRT>  <LPR> a= exper() <RPR> { return (new Sqrt(a)); }
+	| <SIN>  <LPR> a= exper() <RPR> { return (new Sin(a)); }
+	| <COS>  <LPR> a= exper() <RPR> { return (new Cos(a)); }
+	| <MAX>  <LPR> a= exper() <COM> b= exper() <RPR> { return (new Max(a,b)); }
+	| <MIN>  <LPR> a= exper() <COM> b= exper() <RPR> { return (new Min(a,b)); }
+}
+
+ExpList ExpList() :																//plist llist
+{ Exp e; ExpList el; }
+{
+  e= exper() ( <COM> el=ExpList() { return new PList(e, el); } )?
+  { return new LList(e); }
+}
+
+
+
+
+
+
+
+
+
+
+

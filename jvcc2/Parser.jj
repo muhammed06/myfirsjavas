@@ -1,0 +1,91 @@
+options {
+  DEBUG_PARSER = false; // Set to false to turn off token printing
+}
+PARSER_BEGIN(Parser)
+  class Parser {
+		public static void main(String[] args)
+		throws ParseException{
+			new Parser(System.in).Start();
+		}
+  }
+PARSER_END(Parser)
+TOKEN : {
+   < SEMI: ";" >
+ | < ASSIGN: ":=" >
+ | < PRINT: "print" >
+ | < LPR: "(" >
+ | < RPR: ")" >
+ | < #DIGIT: ["0"-"9"] >
+ | < ID: ["a"-"z"] (["a"-"z"])* >
+ | < NUM: (<DIGIT>)+ >
+ | < COMMA: "," >
+ | < PLUS: "+" >
+ | < MINUS: "-" >
+ | < TIMES: "*" >
+ | < DIVIDE: "/" >
+}
+
+SKIP: {
+   < "--" (~["\n", "\r"])* ("\n" | "\r" | "\r\n") >
+ | " "
+ | "\t"
+ | "\n"
+ | "\r"
+}
+
+Stm Start() :
+{ Stm s; }
+{ s=Stm() <EOF> { return s; } }
+
+Stm Stm() :
+{ Stm s1, s2;}
+{ 
+  s1=Stm2() ( <SEMI> s2=Stm() { s1 = new CStm(s1, s2); } )?
+  { return s1; }
+}
+
+Stm Stm2() :
+{ Token id; Exp e; ExpList el; }
+{
+   id=<ID> <ASSIGN> e=Exp() {  return new AStm(id.image, e); }
+ | <PRINT> <LPR> el=ExpList() <RPR> { return new PStm(el); }
+}
+
+Exp Exp() :
+{ Exp e1, e2; int op; }
+{
+  e1=Exp3() ( (<PLUS> {op=1;} | <MINUS> {op=2;}) e2=Exp3() { e1=new OpExp(e1, op, e2); } )*
+  { return e1; }
+}
+
+Exp Exp3():
+{ Exp e1, e2; int op; }
+{
+  e1=Exp2() ( (<TIMES> {op=3;} | <DIVIDE> {op=4;}) e2=Exp2() { e1=new OpExp(e1, op, e2); } )*
+  { return e1; }
+}
+
+Exp Exp2() :
+{ Token id, num; Stm s; Exp e; }
+{
+   id=<ID> { return new IdExp(id.image); }
+ | num=<NUM> { return new NumExp(Double.parseDouble(num.image)); }
+ | <LPR> s=Stm() <COMMA> e=Exp() <RPR> { return new EseqExp(s, e); }
+}
+
+ExpList ExpList() :
+{ Exp e; ExpList el; }
+{
+  e=Exp() ( <COMMA> el=ExpList() { return new PList(e, el); } )?
+  { return new LList(e); }
+}
+
+int Binop() :
+{}
+{
+   <PLUS> { return 1; }
+ | <MINUS> { return 2; }
+ | <TIMES> { return 3; }
+ | <DIVIDE> { return 4; }
+}
+

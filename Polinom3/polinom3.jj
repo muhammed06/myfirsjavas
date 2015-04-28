@@ -1,0 +1,61 @@
+/*
+E  -> T E'
+E' -> + T E'
+E' ->
+T  -> num P
+P  -> x S
+P  ->
+S  -> ^2
+S  ->
+*/
+
+
+options { 
+    STATIC = true; //ayr??t?r?c?n?n metotlar? statik olur
+	LOOKAHEAD = 1;
+}
+
+PARSER_BEGIN( Pol )
+  class Pol {
+		public static void main(String[] args)throws ParseException{
+			new Pol(System.in).Polinom();
+		}
+  }
+PARSER_END( Pol )
+
+SKIP : { " " | "\t" | "\n" | "\r" | "\r\n" }
+
+TOKEN : {
+	  <US : "^2" >
+	| <SAYI : (["0"-"9"]) + ("." (["0"-"9"])+)? >
+	| <X : "x" | "X" >
+	| <ARTI : "+" >
+}
+
+void Polinom ( ) : {}
+{
+	( T() Eus() )+ <EOF>
+}
+
+void Eus() : {}
+{
+	  <ARTI> T() Eus()
+	| {return;}
+}
+
+void T() : {}
+{
+	<SAYI> P()
+}
+
+void P() : {}
+{
+	<X> S()
+	| {return;}
+}
+
+void S() : {}
+{
+	<US>
+	| {return;}
+}

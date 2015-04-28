@@ -1,0 +1,59 @@
+/*
+	E->( E )
+	E->id E'
+	E->num E'
+	E'->+ E
+	E'->* E
+	E'->^ E
+	E'->
+*/
+
+options { 
+    STATIC = true; //ayrýþtýrýcýnýn metotlarý statik olur
+	LOOKAHEAD = 1;
+	DEBUG_PARSER = true;
+}
+
+PARSER_BEGIN( drl )
+public class drl{
+}
+PARSER_END(drl)
+
+
+SKIP :
+{
+	" " |"\t" | "\n" | "\r" | "\r\n"
+}
+
+
+TOKEN :
+{
+	| < USSU : "^" >
+	| < CARPI : "*" >
+	| < ARTI : "+" >
+	| < SGPAR : ")" >
+	| < SLPAR : "(" >
+	| < NUM : ["0"-"9"]+ ( "." (["0"-"9"])+ )? ) >
+	| < ID : ["a"-"z"] (["a"-"z"])* >
+}
+
+
+basla () : {}
+{
+	E() (<EOF>)
+}
+
+E() : {}
+{	
+	  <SGPAR> E() <SLPAR>
+	| <ID> EU()
+	| <NUM> EU()
+}
+
+EU() : {}
+{
+	  <ARTI> E()
+	| <CARPI> E()
+	| <USSU> E()
+	| 
+}
